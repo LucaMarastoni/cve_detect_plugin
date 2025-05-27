@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import subprocess
 import json
@@ -5,22 +7,43 @@ import sys
 from packaging import version
 from pathlib import Path
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+import requests
 
+# === Configurazione ===
 REPO_URL = "https://github.com/CVEProject/cvelistV5.git"
 LOCAL_REPO = "cvelistV5"
 TECH_FILE = "tech_list.txt"
 
-# Codici di Nagios
+# Codici Nagios
 OK = 0
 WARNING = 1
 CRITICAL = 2
 UNKNOWN = 3
+
+# === Caricamento variabili da .env ===
+load_dotenv()
+TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
+TG_CHAT_ID = os.getenv("TG_CHAT_ID")
+
+
+def send_telegram_message(bot_token, chat_id, message):
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    data = {"chat_id": chat_id, "text": message}
+    try:
+        r = requests.post(url, data=data)
+        r.raise_for_status()
+        print("📲 Notifica Telegram inviata.")
+    except Exception as e:
+        print(f"❌ Errore Telegram: {e}")
+
 
 def clone_or_update_repo():
     if not os.path.exists(LOCAL_REPO):
         subprocess.run(["git", "clone", REPO_URL, LOCAL_REPO], check=True)
     else:
         subprocess.run(["git", "-C", LOCAL_REPO, "pull"], check=True)
+
 
 def load_tech_keywords():
     if not os.path.exists(TECH_FILE):
@@ -34,6 +57,7 @@ def load_tech_keywords():
             elif len(parts) == 1:
                 keywords.append((parts[0], None))
     return keywords
+
 
 def find_recent_json_files():
     cmd = [
@@ -56,52 +80,17 @@ def find_recent_json_files():
                 files.add(path)
     return list(files)
 
+
 def get_highest_cvss_score(metrics):
     scores = []
     for m in metrics:
-        for key in ("cvssV4_0","cvssV3_1","cvssV3_0","cvssV2_0"):
+        for key in ("cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0"):
             if key in m and "baseScore" in m[key]:
                 scores.append(m[key]["baseScore"])
     return max(scores) if scores else 0.0
 
-def get_affected(cna):
-    affected = []
-    for a in cna.get("affected", []):
-        vendor = a.get("vendor", "").strip()
-        product = a.get("product", "").strip()
-        versions = a.get("versions", [])
-        is_affected = any(v.get("status") == "affected" for v in versions)
-
-        if vendor and product and is_affected:
-            affected.append(f"{vendor} {product}")
-    return affected
-
-
-def scan_file(json_path, techs):
-    with open(json_path) as f:
-        data = json.load(f)
-    cna = data.get("containers", {}).get("cna", {})
-    score = get_highest_cvss_score(cna.get("metrics", []))
-    if score < 1.0:
-        return None
-
-    for a in cna.get("affected", []):
-        vendor = a.get("vendor", "").lower()
-        product = a.get("product", "").lower()
-        joined = f"{vendor} {product}".strip()
-        versions = a.get("versions", [])
-
-        for tech_name, tech_version in techs:
-            if tech_name in joined:
-                if tech_version is None or is_version_affected(tech_version, versions):
-                    title = cna.get("title", "")
-                    return tech_name, tech_version, title, score
-
-    return None
-
 
 def is_version_affected(version_str, version_constraints):
-
     try:
         user_version = version.parse(version_str)
     except Exception:
@@ -129,6 +118,27 @@ def is_version_affected(version_str, version_constraints):
     return False
 
 
+def scan_file(json_path, techs):
+    with open(json_path) as f:
+        data = json.load(f)
+    cna = data.get("containers", {}).get("cna", {})
+    score = get_highest_cvss_score(cna.get("metrics", []))
+    if score < 1.0:
+        return None
+
+    for a in cna.get("affected", []):
+        vendor = a.get("vendor", "").lower()
+        product = a.get("product", "").lower()
+        joined = f"{vendor} {product}".strip()
+        versions = a.get("versions", [])
+
+        for tech_name, tech_version in techs:
+            if tech_name in joined:
+                if tech_version is None or is_version_affected(tech_version, versions):
+                    title = cna.get("title", "")
+                    return tech_name, tech_version, title, score
+    return None
+
 
 def main():
     clone_or_update_repo()
@@ -142,7 +152,7 @@ def main():
     for jf in files:
         res = scan_file(jf, techs)
         if res:
-            matches.append((jf, *res)) 
+            matches.append((jf, *res))
 
     if not matches:
         print("OK - nessuna CVE critica trovata")
@@ -159,8 +169,16 @@ def main():
         )
 
     status_str = "CRITICAL" if exit_code == CRITICAL else "WARNING"
-    print(f"{status_str} - {len(matches)} CVE critiche trovate:")
-    print("\n".join(formatted_output))
+    summary = f"{status_str} - {len(matches)} CVE critiche trovate:\n" + "\n".join(formatted_output)
+    print(summary)
+
+    if TG_BOT_TOKEN and TG_CHAT_ID:
+        send_telegram_message(TG_BOT_TOKEN, TG_CHAT_ID, summary)
+    else:
+        print("⚠️  Telegram non configurato correttamente.")
+
     sys.exit(exit_code)
 
-main()
+
+if __name__ == "__main__":
+    main()
