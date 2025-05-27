@@ -1,0 +1,9 @@
+CloudBees 2.462.3.3
+Jenkins 2.509
+JFrog 7.113.4
+GitLab 18.0
+Java 24
+Nginx 1.28.0
+Kubernetes 1.33.1
+moonlightL 6.1.0
+JeeSite 5.11.0
