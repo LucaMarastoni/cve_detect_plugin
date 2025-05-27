@@ -159,8 +159,4 @@ Ensure the cron user has read/write permissions on the log path.
   ```
 * Run `cve_monitor.py` with debug prints by editing the script.
 
----
 
-## 📝 License
-
-This project is licensed under the MIT License. © 2025 Luca Marastoni
