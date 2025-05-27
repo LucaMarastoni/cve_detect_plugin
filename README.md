@@ -2,7 +2,7 @@
 
 **Script**: `cve_monitor.py`
 
-CVE Detector is a Python script that daily monitors new critical vulnerabilities (CVEs) published in the [CVEProject/cvelistV5](https://github.com/CVEProject/cvelistV5) repository. It filters alerts by technology and version of interest, and outputs results in a Nagios-compatible format.
+CVE Detector is a Python script that daily monitors new critical vulnerabilities published in the [CVEProject/cvelistV5](https://github.com/CVEProject/cvelistV5) repository. It filters alerts by technology and version of interest, and outputs results in a Nagios-compatible format.
 
 ---
 
