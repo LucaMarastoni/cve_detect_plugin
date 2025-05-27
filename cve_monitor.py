@@ -150,7 +150,7 @@ def main():
         company_str = f"Azienda: {company}" if company else "Azienda: N/D"
         status_str = "CRITICAL" if sev == CRITICAL else "WARNING"
         print(f"{status_str} - {tech.upper()}{version_str} | {company_str} | CVSS: {score} | {title.strip()} | File: {path.name}")
-        sys.exit(exit_code)
+    sys.exit(exit_code)
 
 if __name__ == "__main__":
     main()
