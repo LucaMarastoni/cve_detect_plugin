@@ -1,4 +1,4 @@
-# cve\_detector
+# cve\_detect\_plugin
 
 **Script**: `cve_monitor.py`
 
@@ -47,7 +47,7 @@ packaging
 ## 📂 Repository Structure
 
 ```
-cve_detector/             # Root folder
+cve_detect_plugin/             # Root folder
 ├── cve_monitor.py        # Main monitoring script
 ├── tech_list.txt         # Technology and version list (one per line)
 ├── requirements.txt      # Python dependencies
@@ -75,7 +75,7 @@ cve_detector/             # Root folder
 Clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/LucaMarastoni/cve_detector.git
+git clone https://github.com/LucaMarastoni/cve_detect_plugin.git
 cd cve_detector
 python3 -m pip install --user -r requirements.txt
 chmod +x cve_monitor.py
