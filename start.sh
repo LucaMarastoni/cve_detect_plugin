@@ -28,4 +28,4 @@ echo "Installazione delle dipendenze da '$REQ_FILE'..."
 pip install --upgrade pip
 pip install -r "$REQ_FILE"
 
-python3 ./cve_monitor.py
+python3 ./cve_monitor.py "$@"
