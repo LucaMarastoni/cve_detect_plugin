@@ -171,4 +171,5 @@ Ensure the cron user has read/write permissions on the log path.
   ```bash
   git -C cvelistV5 log --since="7 days ago" --diff-filter=A
   ```
+  
 * Run `cve_monitor.py` with debug prints by editing the script.
