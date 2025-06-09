@@ -1,2 +1,4 @@
 cvelistV5/
 venv/
+.coverage
+*.pyc
